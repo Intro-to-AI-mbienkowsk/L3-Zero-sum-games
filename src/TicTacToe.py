@@ -1,5 +1,5 @@
-from constants import BOARD_SIZE, Symbol
-from Player import Player
+from src.constants import BOARD_SIZE, Symbol
+from src.Player import Player
 from copy import deepcopy
 
 
@@ -10,14 +10,16 @@ class TicTacToe:
     def is_empty(self, pos):
         return self.board[pos[0]][pos[1]] == Symbol.EMPTY
 
-    def __init__(self, players: tuple[Player], board_size=BOARD_SIZE):
+    def __init__(self, players: tuple, board_size=BOARD_SIZE):
         self.players = players
         self.board_size = board_size
         self.board = self.empty_board()
         self.turn = Symbol.CROSS
 
     def available_moves(self):
-        return set((y, y) for y in range(self.board_size) for x in range(self.board_size) if self.is_empty((y, x)))
+        # FIXME
+        return [
+            (row, col) for row in range(self.board_size) for col in range(self.board_size) if self.is_empty((row, col))]
 
     def possible_winning_lines(self):
         """ Return lists of board cell content, representing lines, that if taken by a player.
