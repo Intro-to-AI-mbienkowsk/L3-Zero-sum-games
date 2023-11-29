@@ -1,7 +1,6 @@
 from functools import cache
 
-from src.Move import Move
-from src.constants import Symbol
+from src.constants import Symbol, symbol_to_string, Move
 import random
 
 
@@ -21,12 +20,15 @@ class Bot(Player):
     def make_move(self, board):
         ...
 
+    def __str__(self):
+        ...
+
 
 class MinimaxBot(Bot):
     def __init__(self, symbol: Symbol):
         super().__init__(symbol)
 
-    def minimax(self, maximizing, board, moves_deep,alpha=float('-inf'), beta=float('inf')):
+    def minimax(self, maximizing, board, moves_deep, alpha=float('-inf'), beta=float('inf')):
         """Evaluate the board using the minimax algorithm"""
         if board.game_over():
             depth_penalty = -.1 * moves_deep if maximizing else .1 * moves_deep
@@ -42,7 +44,7 @@ class MinimaxBot(Bot):
                 best_outcome = max(best_outcome, evaluation)
                 if evaluation > beta:
                     break
-                beta = min(beta, evaluation)
+                alpha = max(alpha, evaluation)
 
         else:
             best_outcome = float('inf')
@@ -51,7 +53,7 @@ class MinimaxBot(Bot):
                 best_outcome = min(best_outcome, evaluation)
                 if evaluation < alpha:
                     break
-                alpha = max(alpha, evaluation)
+                beta = min(beta, evaluation)
 
         return best_outcome
 
@@ -74,6 +76,9 @@ class MinimaxBot(Bot):
             return -1
         return 0
 
+    def __str__(self):
+        return f"Minimax ({symbol_to_string(self.symbol)})"
+
 
 class RandomBot(Bot):
     def __init__(self, symbol: Symbol):
@@ -81,3 +86,6 @@ class RandomBot(Bot):
 
     def make_move(self, board):
         return random.choice(self.possible_moves(board))
+
+    def __str__(self):
+        return f"Random ({symbol_to_string(self.symbol)})"

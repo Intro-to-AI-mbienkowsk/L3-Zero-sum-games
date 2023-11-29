@@ -1,9 +1,8 @@
 import time
 
-from src.Move import Move
 from src.Player import Player, MinimaxBot
 from src.TicTacToe import TicTacToe
-from src.constants import Symbol
+from src.constants import Symbol, Move
 
 
 def cli_game():

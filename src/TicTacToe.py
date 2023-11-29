@@ -1,5 +1,4 @@
-from src.Move import Move
-from src.constants import BOARD_SIZE, Symbol, symbol_to_string
+from src.constants import BOARD_SIZE, Symbol, symbol_to_string, Move
 from copy import deepcopy
 
 
