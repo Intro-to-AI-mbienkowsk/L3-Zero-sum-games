@@ -14,4 +14,4 @@ def symbol_to_string(symbol):
         return 'X'
     elif symbol == Symbol.CIRCLE:
         return 'O'
-    return ''
+    return ' '

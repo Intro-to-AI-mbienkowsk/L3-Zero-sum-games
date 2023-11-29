@@ -1,14 +1,6 @@
-from dataclasses import dataclass
-
-from src.constants import BOARD_SIZE, Symbol
-from src.Player import Player
+from src.Move import Move
+from src.constants import BOARD_SIZE, Symbol, symbol_to_string
 from copy import deepcopy
-
-
-@dataclass(frozen=True)
-class Move:
-    pos: tuple[int, int]
-    symbol: Symbol
 
 
 class TicTacToe:
@@ -18,15 +10,21 @@ class TicTacToe:
         self.board = Board(board_size)
         self.turn = Symbol.CROSS
 
+    def change_turn(self):
+        self.turn = Symbol.CROSS if self.turn == Symbol.CIRCLE else Symbol.CIRCLE
+
+    def make_move(self, move):
+        self.board.make_move(move)
+        self.change_turn()
+
 
 class Board:
     def __init__(self, size: int):
         self.size = size
         self.fields = self.empty_board()
 
-    def __getitem__(self, indices):
-        row, col = indices
-        return self.fields[row][col]
+    def __getitem__(self, row):
+        return self.fields[row]
 
     def __setitem__(self, indices, value: Symbol):
         row, col = indices
@@ -37,14 +35,14 @@ class Board:
 
     def is_empty(self, pos):
         row, col = pos
-        return self[row][pos] == Symbol.EMPTY
+        return self[row][col] == Symbol.EMPTY
 
     def available_moves(self):
         return [(row, col) for row in range(self.size) for col in range(self.size) if self.is_empty((row, col))]
 
     def after_move(self, move: Move):
         """Returns a copy of the board after making a move"""
-        if move not in self.available_moves():
+        if move.pos not in self.available_moves():
             raise ValueError("Invalid move")
 
         board_copy = deepcopy(self)
@@ -58,6 +56,7 @@ class Board:
         lines = [tuple(row) for row in self]
         lines.extend([tuple(self[i][j] for i in range(self.size)) for j in range(self.size)])
         lines.extend([tuple(self[i][i] for i in range(self.size))])
+        lines.extend([tuple(self[2 - i][i] for i in range(self.size))])
         return lines
 
     def make_move(self, move: Move):
@@ -74,8 +73,15 @@ class Board:
                 return line[0]
         return None
 
-    def is_tie(self):
-        return self.winner() is None and len(self.available_moves()) == 0
-
     def game_over(self):
-        return self.winner() is not None or self.is_tie()
+        return self.winner() is not None or not self.available_moves()
+
+    def __str__(self):
+        result = ""
+        for row in self:
+            row_str = "|"
+            for cell in row:
+                row_str += f" {symbol_to_string(cell)} |"
+            row_str += "\n"
+            result += row_str
+        return result

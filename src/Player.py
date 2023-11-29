@@ -1,5 +1,5 @@
+from src.Move import Move
 from src.constants import Symbol
-from TicTacToe import Move
 import random
 
 
@@ -17,13 +17,12 @@ class Bot(Player):
         super().__init__(symbol)
 
     def make_move(self, board):
-        pass
+        ...
 
 
 class MinimaxBot(Bot):
-    def __init__(self, symbol: Symbol, depth):
+    def __init__(self, symbol: Symbol):
         super().__init__(symbol)
-        self.depth = depth
 
     def minimax(self, maximizing, board, alpha=float('-inf'), beta=float('inf')):
         """Evaluate the board using the minimax algorithm"""
@@ -37,14 +36,15 @@ class MinimaxBot(Bot):
             best_outcome = float('inf')
             sorting_key = min
 
-        possible_positions = [board.after_move(move) for move in self.possible_moves(board)]
+        possible_moves = [Move(pos, Symbol.CROSS if maximizing else Symbol.CIRCLE) for pos in board.available_moves()]
+        possible_positions = [board.after_move(move) for move in possible_moves]
         for position in possible_positions:
-            evaluation = self.minimax(maximizing, position)
+            evaluation = self.minimax(not maximizing, position, alpha, beta)
             best_outcome = sorting_key(best_outcome, evaluation)
-            alpha = max(alpha, evaluation)
-            beta = min(beta, evaluation)
-            if alpha >= beta:
-                break
+            # alpha = max(alpha, evaluation)
+            # beta = min(beta, evaluation)
+            # if alpha >= beta:
+            #     break
 
         return best_outcome
 
@@ -52,7 +52,7 @@ class MinimaxBot(Bot):
         if board.is_empty((1, 1)):
             return Move((1, 1), self.symbol)
         maximizing = self.symbol == Symbol.CROSS
-        moves = [(move, self.minimax(maximizing, board.after_move(move))) for move in self.possible_moves(board)]
+        moves = [(move, self.minimax(not maximizing, board.after_move(move))) for move in self.possible_moves(board)]
         random.shuffle(moves)
         moves.sort(key=lambda t: t[1], reverse=maximizing)
         return moves[0][0]
@@ -68,9 +68,10 @@ class MinimaxBot(Bot):
         return 0
 
 
+
 class RandomBot(Bot):
     def __init__(self, symbol: Symbol):
         super().__init__(symbol)
 
-    def make_move(self, game):
-        return random.choice(game.available_moves())
+    def make_move(self, board):
+        return random.choice(self.possible_moves(board))

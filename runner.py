@@ -1,11 +1,9 @@
 import pygame
 import sys
 import time
-from src.Player import Player, RandomBot
+from src.Player import Player, RandomBot, MinimaxBot
 from src.constants import Symbol, symbol_to_string
-from src.TicTacToe import TicTacToe
-
-import src.tictactoe as ttt
+from src.TicTacToe import TicTacToe, Move
 
 pygame.init()
 size = width, height = 600, 400
@@ -61,13 +59,13 @@ while True:
             if playXButton.collidepoint(mouse):
                 time.sleep(0.2)
                 user = Player(Symbol.CROSS)
-                bot = RandomBot(Symbol.CIRCLE)
+                bot = MinimaxBot(Symbol.CIRCLE)
                 game = TicTacToe(players=(user, bot))
 
             elif playOButton.collidepoint(mouse):
                 time.sleep(0.2)
                 user = Player(Symbol.CIRCLE)
-                bot = RandomBot(Symbol.CROSS)
+                bot = MinimaxBot(Symbol.CROSS)
                 game = TicTacToe(players=(user, bot))
 
     else:
@@ -86,7 +84,7 @@ while True:
                 )
                 pygame.draw.rect(screen, white, rect, 3)
 
-                if not game.is_empty((i, j)):
+                if not game.board.is_empty((i, j)):
                     move = moveFont.render(symbol_to_string(game.board[i][j]), True, white)
                     moveRect = move.get_rect()
                     moveRect.center = rect.center
@@ -94,11 +92,11 @@ while True:
                 row.append(rect)
             tiles.append(row)
 
-        game_over = game.is_tie() or game.winner() is not None
+        game_over = game.board.game_over()
 
         # Show title
         if game_over:
-            winner = game.winner()
+            winner = game.board.winner()
             if winner is None:
                 title = f"Game Over: Tie."
             else:
@@ -115,7 +113,7 @@ while True:
         # Check for AI move
         if game.turn != user.symbol and not game_over:
             time.sleep(0.5)
-            move = bot.make_move(game)
+            move = bot.make_move(game.board)
             game.make_move(move)
 
         # Check for a user move
@@ -124,8 +122,9 @@ while True:
             mouse = pygame.mouse.get_pos()
             for i in range(3):
                 for j in range(3):
-                    if game.is_empty((i, j)) and tiles[i][j].collidepoint(mouse):
-                        game.make_move((i, j))
+                    if game.board.is_empty((i, j)) and tiles[i][j].collidepoint(mouse):
+                        player_move = Move((i, j), game.turn)
+                        game.make_move(player_move)
 
         if game_over:
             againButton = pygame.Rect(width / 3, height - 65, width / 3, 50)
