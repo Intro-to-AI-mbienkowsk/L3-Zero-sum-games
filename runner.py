@@ -1,8 +1,8 @@
 import pygame
 import sys
 import time
-from src.Player import Player, RandomBot, MinimaxBot
-from src.constants import Symbol, symbol_to_string
+from src.Player import Player, RandomBot, MinimaxBot, Bot
+from src.constants import Symbol, symbol_to_string, Gamemode
 from src.TicTacToe import TicTacToe, Move
 
 pygame.init()
@@ -14,11 +14,13 @@ white = (255, 255, 255)
 
 screen = pygame.display.set_mode(size)
 
+smallFont = pygame.font.Font("src/OpenSans-Regular.ttf", 20)
 mediumFont = pygame.font.Font("src/OpenSans-Regular.ttf", 28)
-largeFont = pygame.font.Font("src/OpenSans-Regular.ttf", 40)
+largeFont = pygame.font.Font("src/OpenSans-Regular.ttf", 35)
 moveFont = pygame.font.Font("src/OpenSans-Regular.ttf", 60)
 
-user = None
+player_1 = None
+gamemode = Gamemode.NONE
 
 while True:
 
@@ -28,25 +30,60 @@ while True:
 
     screen.fill(black)
 
-    # Let user choose a player.
-    if user is None:
+    if gamemode == Gamemode.NONE:
 
         # Draw title
-        title = largeFont.render("Play Tic-Tac-Toe", True, white)
+        title = largeFont.render("Choose gamemode", True, white)
+        titleRect = title.get_rect()
+        titleRect.center = ((width / 2), 50)
+        screen.blit(title, titleRect)
+
+        # Draw buttons
+        pvb_button = pygame.Rect((width / 16), (height / 2), width / 3, 50)
+        pvb = smallFont.render("Minimax vs Player", True, black)
+        pvb_rect = pvb.get_rect()
+        pvb_rect.center = pvb_button.center
+        pygame.draw.rect(screen, white, pvb_button)
+        screen.blit(pvb, pvb_rect)
+
+        bvb_button = pygame.Rect(5 * (width / 8), (height / 2), width / 3, 50)
+        bvb = smallFont.render("Minimax vs Random", True, black)
+        bvb_rect = bvb.get_rect()
+        bvb_rect.center = bvb_button.center
+        pygame.draw.rect(screen, white, bvb_button)
+        screen.blit(bvb, bvb_rect)
+
+        # Check if button is clicked
+        click, _, _ = pygame.mouse.get_pressed()
+        if click == 1:
+            mouse = pygame.mouse.get_pos()
+            if pvb_button.collidepoint(mouse):
+                time.sleep(0.2)
+                gamemode = Gamemode.PVB
+            elif bvb_button.collidepoint(mouse):
+                time.sleep(0.2)
+                gamemode = Gamemode.BVB
+
+
+    # Let user choose a player.
+    elif player_1 is None:
+        # Draw title
+        title_string = "Choose symbol for minimax bot" if gamemode == Gamemode.BVB else "Pick your symbol"
+        title = largeFont.render(title_string, True, white)
         titleRect = title.get_rect()
         titleRect.center = ((width / 2), 50)
         screen.blit(title, titleRect)
 
         # Draw buttons
         playXButton = pygame.Rect((width / 8), (height / 2), width / 4, 50)
-        playX = mediumFont.render("Play as X", True, black)
+        playX = mediumFont.render("X", True, black)
         playXRect = playX.get_rect()
         playXRect.center = playXButton.center
         pygame.draw.rect(screen, white, playXButton)
         screen.blit(playX, playXRect)
 
         playOButton = pygame.Rect(5 * (width / 8), (height / 2), width / 4, 50)
-        playO = mediumFont.render("Play as O", True, black)
+        playO = mediumFont.render("O", True, black)
         playORect = playO.get_rect()
         playORect.center = playOButton.center
         pygame.draw.rect(screen, white, playOButton)
@@ -58,15 +95,15 @@ while True:
             mouse = pygame.mouse.get_pos()
             if playXButton.collidepoint(mouse):
                 time.sleep(0.2)
-                user = Player(Symbol.CROSS)
-                bot = MinimaxBot(Symbol.CIRCLE)
-                game = TicTacToe(players=(user, bot))
+                player_1 = Player(Symbol.CROSS) if gamemode == Gamemode.PVB else MinimaxBot(Symbol.CROSS)
+                player_2 = MinimaxBot(Symbol.CIRCLE) if gamemode == Gamemode.PVB else RandomBot(Symbol.CIRCLE)
+                game = TicTacToe(players=(player_1, player_2))
 
             elif playOButton.collidepoint(mouse):
                 time.sleep(0.2)
-                user = Player(Symbol.CIRCLE)
-                bot = MinimaxBot(Symbol.CROSS)
-                game = TicTacToe(players=(user, bot))
+                player_1 = Player(Symbol.CIRCLE) if gamemode == Gamemode.PVB else MinimaxBot(Symbol.CIRCLE)
+                player_2 = MinimaxBot(Symbol.CROSS) if gamemode == Gamemode.PVB else RandomBot(Symbol.CROSS)
+                game = TicTacToe(players=(player_1, player_2))
 
     else:
         # Draw game board
@@ -101,24 +138,25 @@ while True:
                 title = f"Game Over: Tie."
             else:
                 title = f"Game Over: {symbol_to_string(winner)} wins."
-        elif game.turn == user.symbol:
-            title = f"Play as {symbol_to_string(user.symbol)}"
+        elif game.turn == player_1.symbol:
+            title = f"{symbol_to_string(player_1.symbol)}\'s turn"
         else:
-            title = f"Computer thinking..."
+            title = f"{symbol_to_string(player_2.symbol)}\'s turn"
+
         title = largeFont.render(title, True, white)
         titleRect = title.get_rect()
         titleRect.center = ((width / 2), 30)
         screen.blit(title, titleRect)
 
         # Check for AI move
-        if game.turn != user.symbol and not game_over:
-            time.sleep(0.5)
-            move = bot.make_move(game.board)
-            game.make_move(move)
+        player_to_move = player_1 if game.turn == player_1.symbol else player_2
+        if isinstance(player_to_move, Bot) and not game_over:
+            time.sleep(.5)
+            game.make_move(player_to_move.make_move(game.board))
 
         # Check for a user move
         click, _, _ = pygame.mouse.get_pressed()
-        if click == 1 and game.turn == user.symbol and not game_over:
+        if click == 1 and not (isinstance(player_to_move, Bot) or game_over):
             mouse = pygame.mouse.get_pos()
             for i in range(3):
                 for j in range(3):
@@ -138,6 +176,8 @@ while True:
                 mouse = pygame.mouse.get_pos()
                 if againButton.collidepoint(mouse):
                     time.sleep(0.2)
-                    user = None
+                    player_1 = None
+                    player_2 = None
+                    gamemode = Gamemode.NONE
 
     pygame.display.flip()

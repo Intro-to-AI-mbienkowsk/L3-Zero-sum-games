@@ -9,6 +9,12 @@ class Symbol(Enum):
     EMPTY = 3
 
 
+class Gamemode(Enum):
+    PVB = 1
+    BVB = 2
+    NONE = 3
+
+
 def symbol_to_string(symbol):
     if symbol == Symbol.CROSS:
         return 'X'
