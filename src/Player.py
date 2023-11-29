@@ -1,3 +1,5 @@
+from functools import cache
+
 from src.Move import Move
 from src.constants import Symbol
 import random
@@ -24,10 +26,11 @@ class MinimaxBot(Bot):
     def __init__(self, symbol: Symbol):
         super().__init__(symbol)
 
-    def minimax(self, maximizing, board, alpha=float('-inf'), beta=float('inf')):
+    def minimax(self, maximizing, board, moves_deep,alpha=float('-inf'), beta=float('inf')):
         """Evaluate the board using the minimax algorithm"""
         if board.game_over():
-            return self.eval(board)
+            depth_penalty = -.1 * moves_deep if maximizing else .1 * moves_deep
+            return self.eval(board) - depth_penalty
 
         possible_moves = [Move(pos, Symbol.CROSS if maximizing else Symbol.CIRCLE) for pos in board.available_moves()]
         possible_positions = [board.after_move(move) for move in possible_moves]
@@ -35,7 +38,7 @@ class MinimaxBot(Bot):
         if maximizing:
             best_outcome = float('-inf')
             for position in possible_positions:
-                evaluation = self.minimax(not maximizing, position, alpha, beta)
+                evaluation = self.minimax(not maximizing, position, moves_deep + 1, alpha, beta)
                 best_outcome = max(best_outcome, evaluation)
                 if evaluation > beta:
                     break
@@ -44,7 +47,7 @@ class MinimaxBot(Bot):
         else:
             best_outcome = float('inf')
             for position in possible_positions:
-                evaluation = self.minimax(not maximizing, position, alpha, beta)
+                evaluation = self.minimax(not maximizing, position, moves_deep + 1, alpha, beta)
                 best_outcome = min(best_outcome, evaluation)
                 if evaluation < alpha:
                     break
@@ -56,7 +59,7 @@ class MinimaxBot(Bot):
         if board.is_empty((1, 1)):
             return Move((1, 1), self.symbol)
         maximizing = self.symbol == Symbol.CROSS
-        moves = [(move, self.minimax(not maximizing, board.after_move(move))) for move in self.possible_moves(board)]
+        moves = [(move, self.minimax(not maximizing, board.after_move(move), 0)) for move in self.possible_moves(board)]
         random.shuffle(moves)
         moves.sort(key=lambda t: t[1], reverse=maximizing)
         return moves[0][0]
