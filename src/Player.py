@@ -29,22 +29,26 @@ class MinimaxBot(Bot):
         if board.game_over():
             return self.eval(board)
 
-        if maximizing:
-            best_outcome = float('-inf')
-            sorting_key = max
-        else:
-            best_outcome = float('inf')
-            sorting_key = min
-
         possible_moves = [Move(pos, Symbol.CROSS if maximizing else Symbol.CIRCLE) for pos in board.available_moves()]
         possible_positions = [board.after_move(move) for move in possible_moves]
-        for position in possible_positions:
-            evaluation = self.minimax(not maximizing, position, alpha, beta)
-            best_outcome = sorting_key(best_outcome, evaluation)
-            # alpha = max(alpha, evaluation)
-            # beta = min(beta, evaluation)
-            # if alpha >= beta:
-            #     break
+
+        if maximizing:
+            best_outcome = float('-inf')
+            for position in possible_positions:
+                evaluation = self.minimax(not maximizing, position, alpha, beta)
+                best_outcome = max(best_outcome, evaluation)
+                if evaluation > beta:
+                    break
+                beta = min(beta, evaluation)
+
+        else:
+            best_outcome = float('inf')
+            for position in possible_positions:
+                evaluation = self.minimax(not maximizing, position, alpha, beta)
+                best_outcome = min(best_outcome, evaluation)
+                if evaluation < alpha:
+                    break
+                alpha = max(alpha, evaluation)
 
         return best_outcome
 
@@ -66,7 +70,6 @@ class MinimaxBot(Bot):
         elif winner == Symbol.CIRCLE:
             return -1
         return 0
-
 
 
 class RandomBot(Bot):
